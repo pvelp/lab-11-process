@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,26 +31,57 @@ string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
  hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
 
+hunter_add_package(BoostProcess)
+find_package(BoostProcess CONFIG REQUIRED)
+hunter_add_package(Boost COMPONENTS log filesystem system chrono thread date_time atomic program_options)
+find_package(Boost COMPONENTS log log_setup filesystem system chrono thread date_time atomic program_options CONFIG REQUIRED)
+
+hunter_add_package(Async++)
+find_package(Async++ CONFIG REQUIRED)
+
 add_library(${PROJECT_NAME} STATIC
   # enum your files and delete this comment
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/example.cpp
-)
+
+        sources/example.cpp)
 
 add_executable(demo
   ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
-)
+        include/process_build.hpp sources/process_builder.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries(demo ${PROJECT_NAME})
+target_link_libraries(demo ${PROJECT_NAME}
+        Boost::log_setup
+        Boost::log
+        Boost::filesystem
+        Boost::chrono
+        Boost::thread
+        Boost::date_time
+        Boost::atomic
+        Boost::system
+        Boost::boost
+        Boost::program_options
+        Threads::Threads
+        Async++::Async++
+        BoostProcess::boost_process)
+
+
+#install(TARGETS demo DESTINATION bin)
+#set(CPACK_PACKAGE_NAME "SimpleApp")
+#set(CPACK_PACKAGE_VENDOR "MyComp")
+#set(CPACK_VERBATIM_VARIABLES true)
+#set(CPACK_PACKAGE_VERSION_MAJOR 0)
+#set(CPACK_PACKAGE_VERSION_MINOR 0)
+#set(CPACK_PACKAGE_VERSION_PATCH 0)
+#include(CPack)
 
 if(BUILD_TESTS)
   add_executable(tests
     # TODO: enum your files and delete this comment
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/example.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
   )
   target_link_libraries(tests ${PROJECT_NAME} GTest::gtest_main)
   enable_testing()
